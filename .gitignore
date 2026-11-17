@@ -1,0 +1,11 @@
+# 取得した mruby のソース（rake mruby:fetch で取得する）
+/vendor/
+
+# ビルドの生成物（exe はコミットしない）
+/build/
+
+# 実機テスト用に切り取った画像（公開リポジトリなのでコミットしない）
+/samples/target.png
+
+# サンプル（samples/list_input.rb）を動かすと作られる
+/samples/result.txt
