@@ -6,6 +6,8 @@
 #   rake test       ビルドして、画面を使わないテストを実行する
 #   rake bench      画像を探す処理の所要時間をはかる
 #   rake sandbox    Windows サンドボックスで確かめるためのファイルを用意する
+#   rake package    配布用の zip を作る
+#   rake version    バージョンを表示する
 #   rake clean      ホストの生成物を消す（mruby のビルド結果は残す）
 #   rake clobber    build/ をすべて消す
 
@@ -29,6 +31,27 @@ OBJ_DIR = "build/obj"
 GEN_DIR = "build/gen" # ビルドの途中で生成するソース
 EXE = "build/pikulix.exe"
 SANDBOX_DIR = "build/sandbox"
+
+# バージョンは src/version.h に書く。文字列と数値が食い違っていれば止める。
+VERSION_H = "src/version.h"
+VERSION = begin
+  header = File.read(VERSION_H)
+  string = header[/^#define PIKULIX_VERSION "([^"]+)"$/, 1]
+  numbers = %w[MAJOR MINOR PATCH].map { |part| header[/^#define PIKULIX_VERSION_#{part} (\d+)$/, 1] }
+  abort "#{VERSION_H} からバージョンを読み取れません" if string.nil? || numbers.include?(nil)
+  unless string == numbers.join(".")
+    abort "#{VERSION_H} の PIKULIX_VERSION（#{string}）と、数値（#{numbers.join('.')}）が食い違っています"
+  end
+  string
+end
+
+# 配布用の zip。中身はフォルダに入れず、zip の直下に置く。Windows 標準の「すべて展開」は、
+# zip と同じ名前のフォルダを作ってそこへ展開するので、中にもフォルダがあると二重になる。
+PACKAGE_DIR = "build/package"
+ZIP = "build/pikulix-#{VERSION}.zip"
+# zip に入れるもの（exe のほか）。git で管理しているファイルだけを入れる。
+# samples/ にある管理外のファイル（result.txt や、実機での確認に使った画像）は入れない。
+PACKAGE_FILES = %w[README.md LICENSE.txt THIRD_PARTY_NOTICES.txt docs/api.md samples].freeze
 
 # mruby のビルドに使った定義。ホストも同じ定義でコンパイルする。
 # mruby_build_config.rb の conf.defines と揃えること。
@@ -56,7 +79,7 @@ ALLOWED_DLLS = [
   /\Aadvapi32\.dll\z/i # 操作の相手が管理者として動いているかを調べる
 ].freeze
 
-CLEAN.include(OBJ_DIR, GEN_DIR, EXE, SANDBOX_DIR)
+CLEAN.include(OBJ_DIR, GEN_DIR, EXE, SANDBOX_DIR, PACKAGE_DIR, "build/pikulix-*.zip")
 CLOBBER.include("build")
 
 # gcc を使えるようにする。PATH に無ければ、RubyInstaller 付属の MSYS2 を
@@ -131,7 +154,7 @@ FileList["src/*.cpp"].each do |src|
 end
 
 # マニフェスト（DPI 対応などの宣言）を exe に埋め込むためのリソース。
-file RES_OBJ => ["src/pikulix.rc", "src/pikulix.manifest"] do |t|
+file RES_OBJ => ["src/pikulix.rc", "src/pikulix.manifest", VERSION_H] do |t|
   enable_toolchain
   mkdir_p OBJ_DIR
   sh "windres", "-I", "src", "-O", "coff", "-i", "src/pikulix.rc", "-o", t.name
@@ -202,6 +225,36 @@ task sandbox: :build do
   puts
   puts "#{wsb} を開くと、サンドボックスが起動してフォルダが開きます。"
   puts "その中で、hello.rb や こんにちは.rb を pikulix.exe にドラッグ＆ドロップしてください。"
+end
+
+desc "バージョン（src/version.h）を表示する"
+task :version do
+  puts VERSION
+end
+
+desc "配布用の zip（#{ZIP}）を作る"
+task package: :build do
+  files = IO.popen(["git", "ls-files", "-z", "--", *PACKAGE_FILES], &:read).split("\0")
+  abort "zip に入れるファイルを git から読み取れませんでした" unless $?.success? && !files.empty?
+  missing = PACKAGE_FILES.reject { |path| files.any? { |f| f == path || f.start_with?("#{path}/") } }
+  abort "git で管理されていません: #{missing.join(', ')}" unless missing.empty?
+
+  # 手元の変更がそのまま zip に入るので、知らせておく。リリースは GitHub Actions で作る。
+  changed = IO.popen(["git", "status", "--porcelain", "--", *PACKAGE_FILES, "src"], &:read)
+  warn "注意: コミットしていない変更があります。zip にはいまのファイルが入ります。\n#{changed}" unless changed.empty?
+
+  rm_rf PACKAGE_DIR
+  rm_f ZIP
+  mkdir_p PACKAGE_DIR
+  cp EXE, PACKAGE_DIR
+  files.map { |path| File.join(PACKAGE_DIR, File.dirname(path)) }.uniq.each { |dir| mkdir_p dir }
+  files.each { |path| cp path, File.join(PACKAGE_DIR, path) }
+
+  # zip は Windows に付属の tar（bsdtar）で作る。-a で、拡張子から zip 形式を選ぶ。
+  # MSYS2 の tar（GNU tar）は zip を作れないので、パスを指定して呼ぶ。
+  tar = File.join(ENV.fetch("SystemRoot"), "System32", "tar.exe")
+  sh tar, "-a", "-c", "-f", File.expand_path(ZIP), "-C", PACKAGE_DIR, *Dir.children(PACKAGE_DIR).sort
+  puts "#{ZIP} (#{File.size(ZIP) / 1024} KB)"
 end
 
 task default: :build

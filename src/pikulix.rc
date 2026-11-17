@@ -1,2 +1,40 @@
-// exe に埋め込むリソース。1 = CREATEPROCESS_MANIFEST_RESOURCE_ID、24 = RT_MANIFEST。
+// exe に埋め込むリソース。
+// 文字列に日本語（著作権者の名前）を含むので、このファイルは UTF-8 で書く。
+#pragma code_page(65001)
+
+#include <winver.h>
+
+#include "version.h"
+
+// マニフェスト（DPI 対応などの宣言）。1 = CREATEPROCESS_MANIFEST_RESOURCE_ID、24 = RT_MANIFEST。
 1 24 "pikulix.manifest"
+
+// バージョン情報。エクスプローラーで exe のプロパティを開くと、「詳細」タブに表示される。
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION PIKULIX_VERSION_MAJOR, PIKULIX_VERSION_MINOR, PIKULIX_VERSION_PATCH, 0
+PRODUCTVERSION PIKULIX_VERSION_MAJOR, PIKULIX_VERSION_MINOR, PIKULIX_VERSION_PATCH, 0
+FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
+FILEFLAGS 0
+FILEOS VOS_NT_WINDOWS32
+FILETYPE VFT_APP
+FILESUBTYPE VFT2_UNKNOWN
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    // 0411 = 日本語、04B0 = 文字列は UTF-16。下の Translation と揃える。
+    BLOCK "041104B0"
+    BEGIN
+      VALUE "FileDescription", "Pikulix"
+      VALUE "FileVersion", PIKULIX_VERSION
+      VALUE "InternalName", "pikulix"
+      VALUE "LegalCopyright", "Copyright (c) 2026 ぽよぽよ"
+      VALUE "OriginalFilename", "pikulix.exe"
+      VALUE "ProductName", "Pikulix"
+      VALUE "ProductVersion", PIKULIX_VERSION
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x0411, 1200
+  END
+END

@@ -2,6 +2,7 @@
 //
 //   pikulix.exe script.rb
 //   pikulix.exe --screen-image 画像 script.rb   （テストモード）
+//   pikulix.exe --version
 //
 // 終了コード: 0 成功、1 スクリプトのエラー、2 起動できなかった、3 緊急停止。
 // スクリプトが exit を呼んだときは、その値。
@@ -22,6 +23,7 @@
 #include "image.h"
 #include "input.h"
 #include "util.h"
+#include "version.h"
 
 // src/prelude.rb の中身。ビルドのときに Rakefile が生成する（kPreludeSource）。
 #include "prelude.inc"
@@ -187,7 +189,8 @@ int usage() {
           "使い方: pikulix.exe script.rb\n"
           "\n"
           "  --screen-image 画像   テストモード。画面の代わりに画像ファイルを探し、\n"
-          "                        マウスやキーボードの操作は送らない（ログだけ出す）。\n");
+          "                        マウスやキーボードの操作は送らない（ログだけ出す）。\n"
+          "  --version             バージョンを表示する。\n");
   return kExitStartupError;
 }
 
@@ -204,7 +207,11 @@ int wmain(int argc, wchar_t** argv) {
   const wchar_t* screen_image = nullptr;
   int i = 1;
   while (i < argc && wcsncmp(argv[i], L"--", 2) == 0) {
-    if (wcscmp(argv[i], L"--screen-image") == 0 && i + 1 < argc) {
+    if (wcscmp(argv[i], L"--version") == 0 && argc == 2) {
+      printf("pikulix %s\n", PIKULIX_VERSION);
+      console::restore_code_page();
+      return 0;
+    } else if (wcscmp(argv[i], L"--screen-image") == 0 && i + 1 < argc) {
       screen_image = argv[i + 1];
       i += 2;
     } else {

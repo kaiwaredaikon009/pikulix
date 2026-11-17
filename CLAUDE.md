@@ -26,11 +26,11 @@ SikuliX ライクな、画像認識ベースの Windows 用 RPA ツール。画�
 - 画面の中から画像を探し、マウスとキーボードを操作する。スクリプトは `pikulix.exe script.rb` で実行する。
 - スクリプト言語は mruby 4.0.0 で、ホスト（C++17）の exe に静的リンクする。ツールチェーンは MSYS2 UCRT64 の gcc。対象は x64 の Windows 11。
 - 配布物は単一の exe で、依存するのは Windows 標準の DLL だけである。OpenCV などの重い依存は足していない。
-- Phase 1（最小限の動くもの）は、実装と実機での確認を終えた。Phase 2（公開）の前半として、README とライセンスの文書を作り、開発用の作業ノートを `docs/dev/` に分けた。作成者がリポジトリの履歴を作り直し、公開（Public）に切り替えた。次は GitHub Actions によるビルドと、Releases への最初の版の配置である（2026-11-17 時点。最新の状態は `docs/dev/ロードマップ.md`）。
+- Phase 1（最小限の動くもの）は、実装と実機での確認を終えた。Phase 2（公開）の前半として、README とライセンスの文書を作り、開発用の作業ノートを `docs/dev/` に分けた。作成者がリポジトリの履歴を作り直し、公開（Public）に切り替えた。GitHub Actions の設定と zip の作成（`rake package`）を入れ、最初の版（0.1.0）を Releases に置く作業の途中である（2026-11-17 時点。最新の状態は `docs/dev/ロードマップ.md`）。
 
 ## ディレクトリ構成とビルド
 
-`rake` でビルド、`rake test` でテスト、`rake bench` で探索時間の計測ができる。手順は `docs/ビルド手順.md` にある。
+`rake` でビルド、`rake test` でテスト、`rake bench` で探索時間の計測、`rake package` で配布用の zip の作成ができる。手順は `docs/ビルド手順.md` にある。リリースの zip は GitHub Actions で作る（同じ文書の「リリース」）。
 
 | パス | 内容 |
 | --- | --- |
@@ -46,7 +46,9 @@ SikuliX ライクな、画像認識ベースの Windows 用 RPA ツール。画�
 | `src/screen.cpp` | 画面キャプチャ（GDI）。 |
 | `src/input.cpp` | マウス、キーボード、クリップボード（`SendInput`）。 |
 | `src/console.cpp` | コンソールの文字コードと、ウィンドウの最小化。 |
-| `src/pikulix.manifest`、`src/pikulix.rc` | exe に埋め込むマニフェスト（`asInvoker`、Per-Monitor V2 の DPI 対応）。 |
+| `src/version.h` | バージョン。リリースのときは、ここだけを書き換える。 |
+| `src/pikulix.manifest`、`src/pikulix.rc` | exe に埋め込むマニフェスト（`asInvoker`、Per-Monitor V2 の DPI 対応）と、バージョン情報。 |
+| `.github/workflows/build.yml` | GitHub Actions の設定。push のたびにビルドとテストを行い、`v` で始まるタグでは Releases に下書きを作る。 |
 | `samples/` | サンプルスクリプト。zip にも入るので、`test/samples_test.rb` で確かめている。 |
 | `test/run.rb`、`test/*_test.rb` | 画面を使わないテスト。exe を実際に起動して、出力と終了コードを確かめる。 |
 | `test/support/canvas.rb` | テスト用の画像を、その場で描いて作る。 |

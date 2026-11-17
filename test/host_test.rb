@@ -91,6 +91,20 @@ class HostTest < Minitest::Test
     assert_equal 0, status.exitstatus
   end
 
+  def test_versionでバージョンを表示する
+    version = File.read(File.join(ROOT, "src", "version.h"))[/^#define PIKULIX_VERSION "([^"]+)"$/, 1]
+    out, err, status = run_pikulix("--version")
+    assert_equal "pikulix #{version}\n", out
+    assert_equal "", err
+    assert_equal 0, status
+  end
+
+  def test_versionにほかの引数を付けると使い方を出す
+    _out, err, status = run_pikulix("--version", script("utf8.rb"))
+    assert_match(/使い方/, err)
+    assert_equal 2, status
+  end
+
   def test_引数が無ければ使い方を出して終了コード2を返す
     _out, err, status = run_pikulix
     assert_match(/使い方/, err)
