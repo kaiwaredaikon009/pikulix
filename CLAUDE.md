@@ -26,7 +26,7 @@ SikuliX ライクな、画像認識ベースの Windows 用 RPA ツール。画�
 - 画面の中から画像を探し、マウスとキーボードを操作する。スクリプトは `pikulix.exe script.rb` で実行する。
 - スクリプト言語は mruby 4.0.0 で、ホスト（C++17）の exe に静的リンクする。ツールチェーンは MSYS2 UCRT64 の gcc。対象は x64 の Windows 11。
 - 配布物は単一の exe で、依存するのは Windows 標準の DLL だけである。OpenCV などの重い依存は足していない。
-- Phase 1（最小限の動くもの）は、実装と実機での確認を終えた。Phase 2（公開）の前半として、README とライセンスの文書を作り、開発用の作業ノートを `docs/dev/` に分けた。作成者がリポジトリの履歴を作り直し、公開（Public）に切り替えた。GitHub Actions の設定と zip の作成（`rake package`）を入れ、最初の版（0.1.0）を Releases に置く作業の途中である（2026-11-17 時点。最新の状態は `docs/dev/ロードマップ.md`）。
+- Phase 1（最小限の動くもの）は、実装と実機での確認を終えた。Phase 2（公開）の前半として、README とライセンスの文書を作り、開発用の作業ノートを `docs/dev/` に分けた。作成者がリポジトリの履歴を作り直し、公開（Public）に切り替えた。GitHub Actions の設定と zip の作成（`rake package`）を入れ、最初の版（0.1.0）を Releases に公開した。これで Phase 2 は終わった（2026-11-18 時点。最新の状態は `docs/dev/ロードマップ.md`）。
 
 ## ディレクトリ構成とビルド
 
