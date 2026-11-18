@@ -3,6 +3,11 @@
 //   pikulix.exe script.rb
 //   pikulix.exe --screen-image 画像 script.rb   （テストモード）
 //   pikulix.exe --version
+//   pikulix.exe                                 （ダブルクリックで起動したとき）
+//
+// エクスプローラーから exe をダブルクリックすると、スクリプトを選ぶダイアログを出す。
+// そうして実行したスクリプトがエラーで終わったときは、メッセージを読めるように、
+// Enter キーが押されるまでコンソールを閉じない。
 //
 // 終了コード: 0 成功、1 スクリプトのエラー、2 起動できなかった、3 緊急停止。
 // スクリプトが exit を呼んだときは、その値。
@@ -22,6 +27,7 @@
 #include "console.h"
 #include "image.h"
 #include "input.h"
+#include "picker.h"
 #include "util.h"
 #include "version.h"
 
@@ -35,6 +41,10 @@ namespace {
 const int kExitScriptError = 1;
 const int kExitStartupError = 2;
 const int kExitEmergencyStop = 3;
+
+// エラーのメッセージを出したか。ダイアログから実行したときに、Enter を待つかを決める。
+// スクリプトが exit 1 などで終わったときは、エラーとしない。
+bool g_error_reported = false;
 
 bool read_file(const wchar_t* path, std::string& out) {
   FILE* fp = _wfopen(path, L"rb");
@@ -147,6 +157,7 @@ int load_source(mrb_state* mrb, const char* source, size_t len, const char* file
     mrb_print_error(mrb);
   }
   mrb->exc = nullptr;
+  g_error_reported = true;
   return kExitScriptError;
 }
 
@@ -156,6 +167,7 @@ int run_script(const wchar_t* path) {
   std::string source;
   if (!read_file(path, source)) {
     fprintf(stderr, "pikulix: スクリプトを読めません: %s\n", path_utf8.c_str());
+    g_error_reported = true;
     return kExitStartupError;
   }
 
@@ -166,6 +178,7 @@ int run_script(const wchar_t* path) {
   mrb_state* mrb = mrb_open();
   if (MRB_OPEN_FAILURE(mrb)) {
     fprintf(stderr, "pikulix: mruby を初期化できません\n");
+    g_error_reported = true;
     if (mrb) mrb_close(mrb);
     return kExitStartupError;
   }
@@ -190,7 +203,10 @@ int usage() {
           "\n"
           "  --screen-image 画像   テストモード。画面の代わりに画像ファイルを探し、\n"
           "                        マウスやキーボードの操作は送らない（ログだけ出す）。\n"
-          "  --version             バージョンを表示する。\n");
+          "  --version             バージョンを表示する。\n"
+          "\n"
+          "エクスプローラーから pikulix.exe をダブルクリックすると、\n"
+          "実行するスクリプトを選ぶ画面が出る。\n");
   return kExitStartupError;
 }
 
@@ -220,12 +236,27 @@ int wmain(int argc, wchar_t** argv) {
       return status;
     }
   }
-  if (argc - i != 1) {
+  // ダブルクリックで起動されたら、スクリプトを選んでもらう。
+  // コマンドプロンプトから引数なしで実行したときは、使い方を出す。
+  std::wstring chosen;
+  const bool from_dialog = argc == 1 && console::owns_console_alone();
+  if (from_dialog) {
+    printf("実行するスクリプトを選んでください。\n");
+    std::string error;
+    if (!choose_script(directory_of(exe_path()), chosen, error)) {
+      if (!error.empty()) {  // 空ならキャンセルされた。何も出さずに終わる
+        fprintf(stderr, "pikulix: スクリプトを選ぶ画面を出せません（%s）\n", error.c_str());
+        console::wait_for_enter();
+      }
+      console::restore_code_page();
+      return kExitStartupError;
+    }
+  } else if (argc - i != 1) {
     int status = usage();
     console::restore_code_page();
     return status;
   }
-  const wchar_t* script = argv[i];
+  const wchar_t* script = from_dialog ? chosen.c_str() : argv[i];
 
   g_app.script_dir = directory_of(full_path(script));
   g_app.exe_dir = directory_of(exe_path());
@@ -237,6 +268,7 @@ int wmain(int argc, wchar_t** argv) {
     if (!load_image(full_path(screen_image), g_app.fake_screen, error)) {
       fprintf(stderr, "pikulix: 画像を読めません: %s（%s）\n",
               wide_to_utf8(screen_image).c_str(), error.c_str());
+      g_error_reported = true;
       status = kExitStartupError;
     }
   } else {
@@ -249,7 +281,12 @@ int wmain(int argc, wchar_t** argv) {
   }
 
   input::release_all();
-  console::restore_window(false);
+  if (from_dialog && g_error_reported) {
+    console::restore_window(true);  // 最小化していたら、前面に出して読んでもらう
+    console::wait_for_enter();
+  } else {
+    console::restore_window(false);
+  }
   console::restore_code_page();
   return status;
 }

@@ -38,6 +38,8 @@ end
    pikulix.exe samples\hello.rb
    ```
 
+   `pikulix.exe` をダブルクリックし、出てきた画面で `samples\hello.rb` を選んでもよい。
+
 zip の中身は次のとおりである。
 
 | ファイル | 内容 |
@@ -62,7 +64,7 @@ zip を展開する前に、zip のプロパティで「許可する」にチェ
 
 1. 探したいボタンやアイコンを、画面から切り取って PNG で保存する。Snipping Tool（Win+Shift+S）が使える。
 2. スクリプトを UTF-8 で書き、拡張子 `.rb` で保存する。画像のパスは、スクリプトのあるフォルダからの相対で書く。
-3. `pikulix.exe スクリプト.rb` で実行する。スクリプトを `pikulix.exe` にドラッグ＆ドロップしてもよい。
+3. `pikulix.exe スクリプト.rb` で実行する。`pikulix.exe` をダブルクリックしてスクリプトを選んでも、スクリプトを `pikulix.exe` にドラッグ＆ドロップしてもよい。ダブルクリックして選んだときは、エラーで終わると、Enter キーを押すまでコンソールが閉じないので、メッセージを読める。
 
 主なメソッドは次のとおりである。
 
@@ -140,9 +142,9 @@ Pikulix is an image-matching RPA tool for Windows. You write the steps in Ruby (
 ### Getting started
 
 1. Download the zip from [Releases](https://github.com/kaiwaredaikon009/pikulix/releases) and extract it to a writable folder (not under `C:\Program Files`).
-2. Open a command prompt in that folder and run `pikulix.exe samples\hello.rb`. A message box should appear.
+2. Open a command prompt in that folder and run `pikulix.exe samples\hello.rb`. A message box should appear. You can also double-click `pikulix.exe` and choose `samples\hello.rb` in the file dialog.
 
-To write your own script, capture the target as a PNG with the Snipping Tool (Win+Shift+S), write a `.rb` file in UTF-8, and run `pikulix.exe script.rb`. Image paths are relative to the script's folder.
+To write your own script, capture the target as a PNG with the Snipping Tool (Win+Shift+S), write a `.rb` file in UTF-8, and run `pikulix.exe script.rb`. Image paths are relative to the script's folder. When you start a script by double-clicking `pikulix.exe`, the console stays open after an error until you press Enter.
 
 The main methods are `find`, `wait`, `exists`, `wait_vanish`, `click`, `double_click`, `right_click`, `hover`, `drag_drop`, `wheel`, `type`, `key`, `paste`, `read_text`, `write_text`, `append_text`, `file_exist?`, `sleep`, `run`, `message_box` and `exit`. The full reference, [docs/api.md](docs/api.md), is in Japanese only.
 

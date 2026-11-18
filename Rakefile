@@ -74,8 +74,8 @@ ALLOWED_DLLS = [
   /\Akernel32\.dll\z/i,
   /\Auser32\.dll\z/i,  # ウィンドウ、マウスとキーボードの入力、クリップボード
   /\Agdi32\.dll\z/i,   # 画面キャプチャ
-  /\Ashell32\.dll\z/i, # アプリの起動（run）
-  /\Aole32\.dll\z/i,   # COM。画像の読み書き（WIC）を呼び出すのに使う
+  /\Ashell32\.dll\z/i, # アプリの起動（run）、スクリプトを選ぶダイアログ
+  /\Aole32\.dll\z/i,   # COM。画像の読み書き（WIC）とスクリプトを選ぶダイアログを呼び出すのに使う
   /\Aadvapi32\.dll\z/i # 操作の相手が管理者として動いているかを調べる
 ].freeze
 

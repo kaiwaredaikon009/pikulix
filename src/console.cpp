@@ -46,6 +46,37 @@ void restore_window(bool activate) {
   if (window) ShowWindow(window, activate ? SW_RESTORE : SW_SHOWNOACTIVATE);
 }
 
+bool owns_console_alone() {
+  // GetConsoleProcessList は、このコンソールを使っているプロセスの数を返す。
+  // 配列が足りないときも、必要な数（つまりプロセスの数）を返す。
+  DWORD processes[2];
+  if (GetConsoleProcessList(processes, 2) != 1) return false;
+
+  // GetConsoleMode は、ハンドルが本物のコンソールのときだけ成功する。
+  DWORD mode = 0;
+  return GetConsoleMode(GetStdHandle(STD_INPUT_HANDLE), &mode) &&
+         GetConsoleMode(GetStdHandle(STD_OUTPUT_HANDLE), &mode) &&
+         GetConsoleMode(GetStdHandle(STD_ERROR_HANDLE), &mode);
+}
+
+void wait_for_enter() {
+  HANDLE in = GetStdHandle(STD_INPUT_HANDLE);
+  DWORD mode = 0;
+  if (!GetConsoleMode(in, &mode)) return;
+
+  write_error_raw("\nEnter キーを押すと閉じます。");
+
+  // 実行中に押されていたキーを捨ててから、1 行ぶんの入力（Enter まで）を待つ。
+  FlushConsoleInputBuffer(in);
+  SetConsoleMode(in, mode | ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT);
+  wchar_t buf[256];
+  DWORD n = 0;
+  while (ReadConsoleW(in, buf, 256, &n, nullptr) && n > 0) {
+    if (buf[n - 1] == L'\n') break;  // 長い行は、何回かに分けて届く
+  }
+  SetConsoleMode(in, mode);
+}
+
 void write_error_raw(const char* utf8) {
   HANDLE handle = GetStdHandle(STD_ERROR_HANDLE);
   if (!handle || handle == INVALID_HANDLE_VALUE) return;

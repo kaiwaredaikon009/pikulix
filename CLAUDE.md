@@ -38,14 +38,15 @@ SikuliX ライクな、画像認識ベースの Windows 用 RPA ツール。画�
 | `LICENSE.txt`、`THIRD_PARTY_NOTICES.txt` | Pikulix のライセンス（MIT）と、exe に組み込んだもの（mruby、gcc と MinGW-w64 のランタイム）のライセンス表記。zip にも入る。 |
 | `Rakefile` | ビルド一式。mruby の取得とビルド、exe のビルド、依存 DLL の確認、テスト。 |
 | `mruby_build_config.rb` | mruby のビルド設定。含める mrbgems とコンパイル時の定義を決める。 |
-| `src/main.cpp` | ホスト本体。引数の解釈、スクリプトの実行、緊急停止。 |
+| `src/main.cpp` | ホスト本体。引数の解釈、スクリプトの実行、緊急停止、ダブルクリックで起動されたときの流れ。 |
 | `src/prelude.rb` | スクリプト API のうち、Ruby で書いた部分（`find`、`click` など）。exe に埋め込まれる。 |
 | `src/api.cpp` | スクリプト API のうち、C++ で書いた部分（`Pikulix._find` などの単純な関数）。 |
 | `src/match.cpp` | 画像を探す処理。画面や入力に依存しない。一致度の定義は、このファイルの冒頭にある。 |
 | `src/image.cpp` | 画像の読み書き（WIC）。 |
 | `src/screen.cpp` | 画面キャプチャ（GDI）。 |
 | `src/input.cpp` | マウス、キーボード、クリップボード（`SendInput`）。 |
-| `src/console.cpp` | コンソールの文字コードと、ウィンドウの最小化。 |
+| `src/console.cpp` | コンソールの文字コード、ウィンドウの最小化、ダブルクリックで起動されたかの判定、Enter 待ち。 |
+| `src/picker.cpp` | スクリプトを選ぶダイアログ（ダブルクリックで起動したときに出す）。 |
 | `src/version.h` | バージョン。リリースのときは、ここだけを書き換える。 |
 | `src/pikulix.manifest`、`src/pikulix.rc` | exe に埋め込むマニフェスト（`asInvoker`、Per-Monitor V2 の DPI 対応）と、バージョン情報。 |
 | `.github/workflows/build.yml` | GitHub Actions の設定。push のたびにビルドとテストを行い、`v` で始まるタグでは Releases に下書きを作る。 |

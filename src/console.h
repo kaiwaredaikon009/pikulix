@@ -19,6 +19,16 @@ void minimize();
 // minimize で最小化していたら、元に戻す。activate が true なら前面に出す。
 void restore_window(bool activate);
 
+// このプロセスのためだけに作られたコンソールで動いているか。エクスプローラーから
+// exe をダブルクリックしたときは、Windows が新しいコンソールを作るので、そうなる。
+// コマンドプロンプトから実行したとき（コンソールを共有している）や、標準入出力が
+// リダイレクトされているとき（テストなど）は false を返す。
+bool owns_console_alone();
+
+// 「Enter キーを押すと閉じます」と出して、Enter が押されるまで待つ。
+// エラーで終わったときに、ウィンドウが閉じる前にメッセージを読んでもらうため。
+void wait_for_enter();
+
 // C ランタイムを通さずに、標準エラーへ UTF-8 の文字列を書く。
 // 緊急停止のように、別のスレッドから割り込んで書くときに使う。
 void write_error_raw(const char* utf8);
